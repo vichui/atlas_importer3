@@ -1,4 +1,4 @@
-This is a Atlas import plugin fo GoDot 3.0 - Modify from 
+This is an Atlas import plugin fo GoDot 3.0 - Modify from 
 (https://github.com/GodotExplorer/atlas_importer)
 
 Atlas importer plugin for other texture pack tools
