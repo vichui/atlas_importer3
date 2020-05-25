@@ -6,6 +6,7 @@ const FORMAT_TEXTURE_JSON = 1
 const FORMAT_ATTILA_JSON = 2
 const FORMAT_KENNEY_SPRITESHEET = 3
 const FORMAT_GDX_TEXTURE_PACKER = 4
+const FORMAT_SPINE_JSON = 5
 
 var imagePath = ""
 var width = 0
@@ -42,6 +43,8 @@ func parse(fileContent, format):
 		atlas = _parseKenneySpritsheet(fileContent)
 	elif format == FORMAT_GDX_TEXTURE_PACKER:
 		atlas = _parseGDXTexturePacker(fileContent)
+	elif format == FORMAT_SPINE_JSON:
+		atlas = _parseSpineJson(fileContent)
 	if atlas != null:
 		if atlas.has("imagePath"):
 			self.imagePath = atlas["imagePath"]
@@ -115,72 +118,74 @@ func _parseTexturePackerJson(jsonContent):
 	"""
 	Parse Atlas from json content which is exported from TexturePacker as "JSON"
 	"""
-	var atlas = null
-	var sprites = []
-	var jsonParser = {}
-	if OK == jsonParser.parse_json(jsonContent):
-		atlas = {}
-		atlas["sprites"] = sprites
-		if jsonParser.has("meta") and jsonParser.has("frames"):
-			atlas["imagePath"] = jsonParser["meta"]["image"]
-			atlas["width"] = jsonParser["meta"]["size"]["w"]
-			atlas["height"] = jsonParser["meta"]["size"]["h"]
-			var frames = jsonParser["frames"]
-			for key in frames.keys():
-				var sprite = {}
-				var f = frames[key]
-				sprite["name"] = key
-				sprite["x"] = f["frame"]["x"]
-				sprite["y"] = f["frame"]["y"]
-				sprite["width"] = f["frame"]["w"]
-				sprite["height"] = f["frame"]["h"]
-				sprite["pivotX"] = f["pivot"]["x"]
-				sprite["pivotY"] = f["pivot"]["y"]
-				sprite["orignX"] = f["spriteSourceSize"]["x"]
-				sprite["orignY"] = f["spriteSourceSize"]["y"]
-				sprite["orignWidth"] = f["spriteSourceSize"]["w"]
-				sprite["orignHeight"] = f["spriteSourceSize"]["h"]
-				sprite["rotation"] = 0
-				if f["rotated"]:
-					sprite["rotation"] = deg2rad(90)
-				sprites.append(sprite)
+	var jsonParser := JSON.parse(jsonContent)
+	if jsonParser.error != OK:
+		return null
+	
+	var atlas := {}
+	var sprites := []
+	atlas["sprites"] = sprites
+	if jsonParser.result.has("meta") and jsonParser.result.has("frames"):
+		atlas["imagePath"] = jsonParser.result["meta"]["image"]
+		atlas["width"] = jsonParser.result["meta"]["size"]["w"]
+		atlas["height"] = jsonParser.result["meta"]["size"]["h"]
+		var frames = jsonParser.result["frames"]
+		for key in frames.keys():
+			var sprite = {}
+			var f = frames[key]
+			sprite["name"] = key
+			sprite["x"] = f["frame"]["x"]
+			sprite["y"] = f["frame"]["y"]
+			sprite["width"] = f["frame"]["w"]
+			sprite["height"] = f["frame"]["h"]
+			sprite["pivotX"] = f["pivot"]["x"]
+			sprite["pivotY"] = f["pivot"]["y"]
+			sprite["orignX"] = f["spriteSourceSize"]["x"]
+			sprite["orignY"] = f["spriteSourceSize"]["y"]
+			sprite["orignWidth"] = f["spriteSourceSize"]["w"]
+			sprite["orignHeight"] = f["spriteSourceSize"]["h"]
+			sprite["rotation"] = 0
+			if f["rotated"]:
+				sprite["rotation"] = deg2rad(90)
+			sprites.append(sprite)
 	return atlas
 
 func _parseAttilaJson(jsonContent):
 	"""
 	Parse Atlas from json content which is exported from Attila
 	"""
-	var atlas = null
-	var sprites = []
-	var jsonParser = {}
-	if OK == jsonParser.parse_json(jsonContent):
-		atlas = {}
-		var keys = jsonParser.keys()
-		if keys.size() > 0:
-			if jsonParser[keys[0]].has("dst") and jsonParser[keys[0]].has("hash"):
-				atlas["imagePath"] = jsonParser[keys[0]]["dst"]
-				atlas["sprites"] = sprites
-				for key in keys:
-					var sprite = {}
-					var f = jsonParser[key]
-					sprite["name"] = key
-					sprite["x"] = f["x"]
-					sprite["y"] = f["y"]
-					sprite["width"] = f["w"]
-					sprite["height"] = f["h"]
-					sprite["pivotX"] = 0
-					sprite["pivotY"] = 0
-					sprite["orignX"] = 0
-					sprite["orignY"] = 0
-					sprite["orignWidth"] = f["w"]
-					sprite["orignHeight"] = f["h"]
-					sprite["rotation"] = -deg2rad(f["rotate"])
-					if f["rotate"] == 90:
-						sprite["width"] = f["h"]
-						sprite["height"] = f["w"]
-					sprites.append(sprite)
-				atlas["width"] = 0
-				atlas["height"] = 0
+	var jsonParser := JSON.parse(jsonContent)
+	if jsonParser.error != OK:
+		return null
+	
+	var atlas := {}
+	var sprites := []
+	var keys = jsonParser.result.keys()
+	if keys.size() > 0:
+		if jsonParser.result[keys[0]].has("dst") and jsonParser.result[keys[0]].has("hash"):
+			atlas["imagePath"] = jsonParser.result[keys[0]]["dst"]
+			atlas["sprites"] = sprites
+			for key in keys:
+				var sprite = {}
+				var f = jsonParser.result[key]
+				sprite["name"] = key
+				sprite["x"] = f["x"]
+				sprite["y"] = f["y"]
+				sprite["width"] = f["w"]
+				sprite["height"] = f["h"]
+				sprite["pivotX"] = 0
+				sprite["pivotY"] = 0
+				sprite["orignX"] = 0
+				sprite["orignY"] = 0
+				sprite["orignWidth"] = f["w"]
+				sprite["orignHeight"] = f["h"]
+				sprite["rotation"] = -deg2rad(f["rotate"])
+				if f["rotate"] == 90:
+					sprite["width"] = f["h"]
+					sprite["height"] = f["w"]
+				sprites.append(sprite)
+			atlas["width"] = 0
+			atlas["height"] = 0
 	return atlas
 
 func _parseKenneySpritsheet(xmlContent):
@@ -253,4 +258,39 @@ func _parseGDXTexturePacker(jsonContent):
 		sprite["rotation"] = 0
 		sprites.append(sprite)
 		i+=7
+	return atlas
+
+func _parseSpineJson(fileContent):
+	"""
+	Parse Atlas from json content which is exported from Spine
+	"""
+	var jsonParser := JSON.parse(fileContent)
+	if jsonParser.error != OK:
+		return null
+	
+	var atlas := {}
+	var sprites := []
+	var keys = jsonParser.result.keys()
+	if keys.size() < 3:
+		print("Failed to parse file!")
+		return
+	var textures = jsonParser.result["SubTexture"]
+	atlas["imagePath"] = jsonParser.result["imagePath"]
+	atlas["sprites"] = sprites
+	for texture in textures:
+		var sprite = {
+			"name": texture["name"],
+			"x": texture["x"],
+			"y": texture["y"],
+			"width": texture["width"],
+			"height": texture["height"],
+			"pivotX": 0,
+			"pivotY": 0,
+			"orignX": 0,
+			"orignY": 0,
+			"orignWidth": texture["width"],
+			"orignHeight": texture["height"],
+			"rotation": 0
+		}
+		sprites.append(sprite)
 	return atlas

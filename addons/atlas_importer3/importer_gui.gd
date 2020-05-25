@@ -40,7 +40,7 @@ func _typeSelected(id):
 	if curtype in [AtlasParser.FORMAT_TEXTURE_PACKER_XML, AtlasParser.FORMAT_KENNEY_SPRITESHEET]:
 		if !sourceText.text.ends_with(".xml"):
 			sourceText.text = ""
-	elif curtype in [AtlasParser.FORMAT_TEXTURE_JSON, AtlasParser.FORMAT_ATTILA_JSON]:
+	elif curtype in [AtlasParser.FORMAT_TEXTURE_JSON, AtlasParser.FORMAT_ATTILA_JSON, AtlasParser.FORMAT_SPINE_JSON]:
 		if !sourceText.text.ends_with(".json"):
 			sourceText.text = ""
 	elif curtype in [AtlasParser.FORMAT_GDX_TEXTURE_PACKER]:
@@ -88,7 +88,7 @@ func _on_SourceBrowse_pressed():
 	var curtype = typeButton.get_selected_id()
 	if curtype in [AtlasParser.FORMAT_TEXTURE_PACKER_XML, AtlasParser.FORMAT_KENNEY_SPRITESHEET]:
 		fileDialog.add_filter("*.xml")
-	elif curtype in [AtlasParser.FORMAT_TEXTURE_JSON, AtlasParser.FORMAT_ATTILA_JSON]:
+	elif curtype in [AtlasParser.FORMAT_TEXTURE_JSON, AtlasParser.FORMAT_ATTILA_JSON, AtlasParser.FORMAT_SPINE_JSON]:
 		fileDialog.add_filter("*.json")
 	elif curtype in [AtlasParser.FORMAT_GDX_TEXTURE_PACKER]:
 		fileDialog.add_filter("*.atlas")
